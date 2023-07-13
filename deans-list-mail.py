@@ -178,11 +178,6 @@ def main():
   root.title("Dean's List Email App")
   root.geometry("400x300")
 
-  # background image
-  #bg = PhotoImage(file="uccs.gif")
-  #label1 = ttk.Label(root, image=bg)
-  #label1.place(x=0, y=0)
-
   menubar = tk.Menu(root)
   filemenu = tk.Menu(menubar, tearoff=0)
   filemenu.add_command(label="Exit", command=root.quit)
