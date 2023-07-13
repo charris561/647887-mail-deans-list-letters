@@ -21,6 +21,8 @@ from ttkthemes import ThemedTk
 import webbrowser
 import csv
 import smtplib, ssl
+from threading import Thread
+import queue
 
 def create_pdf(name, gpa, address):
   pdf = FPDF()
@@ -116,7 +118,6 @@ class Application(ttk.Frame):
         self.choose_file["command"] = self.load_file
         self.choose_file.pack()
 
-        # This label is used to display the filename.
         self.file_label = ttk.Label(self, text="")
         self.file_label.pack()
 
@@ -125,6 +126,9 @@ class Application(ttk.Frame):
         self.send_emails["command"] = self.send_emails_func
         self.send_emails.pack()
 
+        self.progress = ttk.Progressbar(self, length=100, mode='indeterminate')
+        self.progress.pack()
+
     def load_file(self):
         self.filename = filedialog.askopenfilename(initialdir = "/", title = "Select file",
                                                    filetypes = (("CSV files","*.csv"),("all files","*.*")))
@@ -132,19 +136,37 @@ class Application(ttk.Frame):
             # Update the file_label text to the filename instead of opening a new window.
             self.file_label["text"] = "Chosen file: " + os.path.basename(self.filename)
 
-
     def send_emails_func(self):
+        self.progress.start()
+        self.queue = queue.Queue()
+        Thread(target=self.send_emails_thread).start()
+        self.master.after(100, self.process_queue)
+
+    def send_emails_thread(self):
         data = []
         with open(self.filename, 'r') as file:
-           reader = csv.reader(file)
+            reader = csv.reader(file)
 
-           for row in reader:
-              data.append(row)
+            for row in reader:
+                data.append(row)
 
-        for row in data[1:]:
+        for index, row in enumerate(data[1:]):
             send_email(self.email_entry.get(), self.pass_entry.get(), row[0], row[1], str(row[2]), row[3])
+            self.queue.put((index+1)*100/len(data))
 
-        messagebox.showinfo("Done", "All emails sent successfully")
+        self.queue.put(None)
+
+    def process_queue(self):
+        try:
+            progress = self.queue.get(0)
+            if progress is None:
+                self.progress.stop()
+                messagebox.showinfo("Done", "All emails sent successfully")
+            else:
+                self.progress['value'] = progress
+            self.master.after(100, self.process_queue)
+        except queue.Empty:
+            self.master.after(100, self.process_queue)
 
 
 def open_help():
