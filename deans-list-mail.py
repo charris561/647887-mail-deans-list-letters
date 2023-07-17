@@ -23,41 +23,48 @@ import tkinter as tk
 from tkinter import ttk, PhotoImage
 from tkinter import filedialog, messagebox
 from ttkthemes import ThemedTk
+from tkinter import StringVar
 import webbrowser
 import csv
 import smtplib, ssl
 from threading import Thread
 import queue
 
-def create_pdf(name, gpa, address):
-    # Register the Times New Roman font
-    fonts.addMapping('Times-Roman', 0, 0, 'Times-Roman')
-    fonts.addMapping('Arial', 0, 0, 'Arial')
+def create_pdf(name, gpa, address, award_type_value):
 
-    # Create a PDF canvas with letter page size
+    fonts.addMapping('Times-Roman', 0, 0, 'Times-Roman')
     filename = name + ".pdf"
     pdf = canvas.Canvas(filename, pagesize=letter)
-
-    # Add image with a 1-inch margin from the top and left
     pdf.drawImage("UCCS Logo Signature.png", x=inch, y=9 * inch, width=4 * 72, height=0.5 * inch)
-
-    # Set font properties
     pdf.setFont("Times-Roman", 12)
-
-    # Add congratulatory message
     message_x = 1 * inch
-    message_y = letter[1] - 2.4 * inch  # Adjusted position for the paragraph
-    message_text = f"""July 13, 2023,<br/><br/><br/>
-    {name}<br/>
-    {address}<br/>
-    Colorado Springs, CO 80907<br/><br/><br/>
-    Dear {name.split(" ")[0]},<br/><br/>
-    Congratulations! I am most pleased to announce that you have been named to the Dean's List for the Spring 2023 semester.
-    In order to receive this honor, a student must have earned between a 3.75-3.99 GPA, while completing at least 12 credit hours.
-    Your GPA from Spring 2023 was {gpa}.<br/><br/>
-    Your outstanding academic performance for this semester is a source of considerable pride for the College of Letters, Arts, and Sciences at the University of Colorado Colorado Springs.<br/><br/>
-    Please accept my sincere congratulations for this well-deserved honor and my hope for your continued academic success. Keep up the great work.<br/><br/><br/>
-    Yours Truly,"""
+    message_y = letter[1] - 2.4 * inch
+    if (award_type_value == 'deans_list'):
+        message_text = f"""July 13, 2023,<br/><br/><br/>
+        {name}<br/>
+        {address}<br/>
+        Colorado Springs, CO 80907<br/><br/><br/>
+        Dear {name.strip().split(" ")[0]},<br/><br/>
+        Congratulations! I am most pleased to announce that you have been named to the Dean's List for the Spring 2023 semester.
+        In order to receive this honor, a student must have earned between a 3.75-3.99 GPA, while completing at least 12 credit hours.
+        Your GPA from Spring 2023 was {gpa}.<br/><br/>
+        Your outstanding academic performance for this semester is a source of considerable pride for the College of Letters, Arts, and Sciences at the University of Colorado Colorado Springs.<br/><br/>
+        Please accept my sincere congratulations for this well-deserved honor and my hope for your continued academic success. Keep up the great work.<br/><br/><br/>
+        Yours Truly,"""
+    elif (award_type_value == 'presidents_list'):
+        message_text = f"""July 13, 2023,<br/><br/><br/>
+        {name}<br/>
+        {address}<br/>
+        Colorado Springs, CO 80907<br/><br/><br/>
+        Dear {name.strip().split(" ")[0]},<br/><br/>
+        Congratulations! I am most pleased to announce that you have been named to the President's List for the Spring 2023 semester.
+        In order to receive this honor, a student must have earned a 4.0 GPA, while completing at least 12 credit hours.
+        Your GPA from Spring 2023 was {gpa}.<br/><br/>
+        Your outstanding academic performance for this semester is a source of considerable pride for the College of Letters, Arts, and Sciences at the University of Colorado Colorado Springs.<br/><br/>
+        Please accept my sincere congratulations for this well-deserved honor and my hope for your continued academic success. Keep up the great work.<br/><br/><br/>
+        Yours Truly,"""
+    else:
+        raise Exception("Unknown radio option selection!")
 
     signature_text = """K. Alex Ilyasova<br/>
     Associate Dean<br/>
@@ -71,121 +78,107 @@ def create_pdf(name, gpa, address):
     paragraph_style.leading = 14.4  # Set line spacing to 1.15
     paragraph_style.spaceAfter = 13.86  # Set paragraph spacing after
 
-    # Footer text
     footer_text = """College of Letters, Arts & Sciences • Office of the Dean<br/>
     Columbine Hall 2025 • 1420 Austin Bluffs Pkwy • Colorado Springs, CO 80918<br/> 
     t 719-255-4550 • f 719-255-4200"""
 
-    # Calculate the text area width and height
     text_width = letter[0] - 2 * inch
     text_height = 4 * inch
 
-    # Create a Paragraph object for the message text
     paragraph = Paragraph(message_text, style=paragraph_style)
 
-    # Calculate the height required for the wrapped text
     wrapped_text_height = paragraph.wrap(text_width, text_height)[1]
 
-    # Calculate the starting y-coordinate for the wrapped text
     start_y = message_y - wrapped_text_height
 
-    # Draw the wrapped text within the text area
     paragraph.drawOn(pdf, message_x, start_y)
 
-    # insert signature
-    signature_image_y = 3.33 * inch  # Adjusted position for the signature image
-    signature_text_y = signature_image_y - 0.01 * inch  # Adjusted position for the signature text
+    signature_image_y = 3.33 * inch  
+    signature_text_y = signature_image_y - 0.01 * inch  
 
-    # Draw the signature image
     pdf.drawImage("deanslistlettersignature.jpg", x=inch, y=signature_image_y, width=2.07 * 72, height=0.82 * inch)
 
-    # Create a Paragraph object for the signature text
     signature_paragraph = Paragraph(signature_text, style=paragraph_style)
 
-    # Calculate the height required for the signature text
     signature_text_height = signature_paragraph.wrap(text_width, text_height)[1]
 
-    # Calculate the starting y-coordinate for the signature text
     signature_start_y = signature_text_y - signature_text_height
 
-    # Draw the signature text
     signature_paragraph.drawOn(pdf, message_x, signature_start_y)
 
-    # Create a Paragraph style for the footer text
     paragraph_style.fontSize = 9.96
     paragraph_style.alignment = 1  # Center-justified
 
-    # Create a Paragraph object for the footer text
     footer_paragraph = Paragraph(footer_text, paragraph_style)
 
-    # Calculate the height required for the footer text
     footer_text_height = footer_paragraph.wrap(text_width, text_height)[1]
 
-    # Calculate the starting y-coordinate for the footer text
     footer_text_y = 0.75 * inch
 
-    # Draw the centered, center-justified footer text
     footer_paragraph.drawOn(pdf, 0.5 * (letter[0] - text_width), footer_text_y)
 
-    # Save the PDF
     pdf.save()
     return filename
 
-def send_email(sender_email, password, receiver_email, name, gpa, address):
+def send_email(sender_email, password, receiver_email, name, gpa, address, award_type_value):
 
-  # create email object
-  message = MIMEMultipart("alternative")
-  message["Subject"] = "Deans List Emails - DEVELOPMENT"
-  message["From"] = sender_email
-  message["To"] = receiver_email
+    if (award_type_value == 'deans_list'):
+        type_value = "Dean's"
+    else:
+        type_value = "President's"
 
-  # create pdf file
-  filename = create_pdf(name, gpa, address)
+    # create email object
+    message = MIMEMultipart("alternative")
+    message["Subject"] = f"LAS {type_value} List Recipient | Spring2023 - DEVELOPMENT"
+    message["From"] = sender_email
+    message["To"] = receiver_email
 
-  # Attach the pdf
-  with open(filename, "rb") as attachment:
-      part = MIMEBase("application", "octet-stream")
-      part.set_payload(attachment.read())
-  encoders.encode_base64(part)
+    # create pdf file
+    filename = create_pdf(name, gpa, address, award_type_value)
 
-  part.add_header(
-      "Content-Disposition",
-      f"attachment; filename= {filename}",
-  )
+    # Attach the pdf
+    with open(filename, "rb") as attachment:
+        part = MIMEBase("application", "octet-stream")
+        part.set_payload(attachment.read())
+    encoders.encode_base64(part)
 
-  message.attach(part)
+    part.add_header(
+        "Content-Disposition",
+        f"attachment; filename= {filename}",
+    )
 
-  # Create HTML version of message
+    message.attach(part)
 
-  html = f"""\
-  <html>
+    # Create HTML message
+    html = f"""\
+    <html>
     <body>
-      <p>
-          Hello {name},<br><br>
-          Congratulations! You have been placed on the Dean's list for academic success with a GPA of {gpa}!
-          Enter rest of message as seen fit.<br><br>
+        <p>
+            Hello {name},<br><br>
+            Congratulations! The College of Letters, Arts & Sciences has named you a {type_value} List honoree for the Spring 2023 semester.<br><br>
+            Associate Dean Ilyasova would like to commend you in the attached letter.<br><br>
+            You've been featured in UCCS' Communique should you like to share the news with family and friends. https://communique.uccs.edu/?p=148841#LAS<br><br>
 
-          Sincerely, Office of Letters Arts and Sciences
-      </p>
+            -The Letters, Arts & Sciences Dean's Office Team
+        </p>
     </body>
-  </html>
-  """
+    </html>
+    """
 
-  # Turn these into plain/html MIMEText objects
-  part2 = MIMEText(html, "html")
+    # Turn these into plain/html MIMEText objects
+    email_message = MIMEText(html, "html")
 
-  # Add HTML/plain-text parts to MIMEMultipart message
-  # The email client will try to render the last part first
-  message.attach(part2)
+    # Add HTML to MIMEMultipart message
+    message.attach(email_message)
 
-  # Create a secure connection with the server
-  context = ssl.create_default_context()
-  with smtplib.SMTP("smtp.office365.com", 587) as server:
-      server.starttls(context=context)
-      server.login(sender_email, password)
-      server.sendmail(sender_email, receiver_email, message.as_string())
+    # Create a secure connection with the server
+    context = ssl.create_default_context()
+    with smtplib.SMTP("smtp.office365.com", 587) as server:
+        server.starttls(context=context)
+        server.login(sender_email, password)
+        server.sendmail(sender_email, receiver_email, message.as_string())
 
-  os.remove(filename)
+    os.remove(filename)
 
 class Application(ttk.Frame):
     def __init__(self, master=None):
@@ -221,6 +214,24 @@ class Application(ttk.Frame):
         self.progress = ttk.Progressbar(self, length=100, mode='indeterminate')
         self.progress.pack()
 
+        self.award_type = StringVar()
+        self.award_type.set("deans_list") 
+        self.radio_button1 = ttk.Radiobutton(
+            self,
+            text="Dean's List Award Message",
+            variable=self.award_type,
+            value="deans_list"
+        )
+        self.radio_button1.pack()
+
+        self.radio_button2 = ttk.Radiobutton(
+            self,
+            text="President's List Award Message",
+            variable=self.award_type,
+            value="presidents_list"
+        )
+        self.radio_button2.pack()
+
     def load_file(self):
         self.filename = filedialog.askopenfilename(initialdir = "/", title = "Select file",
                                                    filetypes = (("CSV files","*.csv"),("all files","*.*")))
@@ -242,8 +253,10 @@ class Application(ttk.Frame):
             for row in reader:
                 data.append(row)
 
+        award_type_value = self.award_type.get()
+
         for index, row in enumerate(data[1:]):
-            send_email(self.email_entry.get(), self.pass_entry.get(), row[0], row[1], str(row[2]), row[3])
+            send_email(self.email_entry.get(), self.pass_entry.get(), row[0], row[1], str(row[2]), row[3], award_type_value)
             self.queue.put((index+1)*100/len(data))
 
         self.queue.put(None)
@@ -267,7 +280,7 @@ def open_help():
 
 def main():
   root = ThemedTk(theme="arc")
-  root.title("Dean's List Email App")
+  root.title("Dean's and President's List Email App")
   root.geometry("400x300")
 
   menubar = tk.Menu(root)
