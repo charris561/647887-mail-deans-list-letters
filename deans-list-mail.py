@@ -40,9 +40,9 @@ def create_pdf(name, gpa, address, city, zip, state, award_type_value, term):
     message_x = 1 * inch
     message_y = letter[1] - 2.4 * inch
     if (award_type_value == 'deans_list'):
-        message_text = f"""July 13, 2023,<br/><br/><br/>
+        message_text = f"""July 13, 2023<br/><br/><br/>
         {name}<br/>
-        {address}<br/>
+        {address.title()}<br/>
         {city}, {state} {zip}<br/><br/><br/>
         Dear {name.strip().split(" ")[0]},<br/><br/>
         Congratulations! I am most pleased to announce that you have been named to the Dean's List for the {term} semester.
@@ -54,12 +54,12 @@ def create_pdf(name, gpa, address, city, zip, state, award_type_value, term):
     elif (award_type_value == 'presidents_list'):
         message_text = f"""July 13, 2023,<br/><br/><br/>
         {name}<br/>
-        {address}<br/>
+        {address.title()}<br/>
         {city}, {state} {zip}<br/><br/><br/>
         Dear {name.strip().split(" ")[0]},<br/><br/>
         Congratulations! I am most pleased to announce that you have been named to the President's List for the {term} semester.
         In order to receive this honor, a student must have earned a 4.0 GPA, while completing at least 12 credit hours.
-        Your GPA from {term} was {gpa}.<br/><br/>
+        Your GPA from {term} was 4.0.<br/><br/>
         Your outstanding academic performance for this semester is a source of considerable pride for the College of Letters, Arts, and Sciences at the University of Colorado Colorado Springs.<br/><br/>
         Please accept my sincere congratulations for this well-deserved honor and my hope for your continued academic success. Keep up the great work.<br/><br/><br/>
         Yours Truly,"""
