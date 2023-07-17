@@ -30,7 +30,7 @@ import smtplib, ssl
 from threading import Thread
 import queue
 
-def create_pdf(name, gpa, address, award_type_value):
+def create_pdf(name, gpa, address, award_type_value, term):
 
     fonts.addMapping('Times-Roman', 0, 0, 'Times-Roman')
     filename = name + ".pdf"
@@ -45,9 +45,9 @@ def create_pdf(name, gpa, address, award_type_value):
         {address}<br/>
         Colorado Springs, CO 80907<br/><br/><br/>
         Dear {name.strip().split(" ")[0]},<br/><br/>
-        Congratulations! I am most pleased to announce that you have been named to the Dean's List for the Spring 2023 semester.
+        Congratulations! I am most pleased to announce that you have been named to the Dean's List for the {term} semester.
         In order to receive this honor, a student must have earned between a 3.75-3.99 GPA, while completing at least 12 credit hours.
-        Your GPA from Spring 2023 was {gpa}.<br/><br/>
+        Your GPA from {term} was {gpa}.<br/><br/>
         Your outstanding academic performance for this semester is a source of considerable pride for the College of Letters, Arts, and Sciences at the University of Colorado Colorado Springs.<br/><br/>
         Please accept my sincere congratulations for this well-deserved honor and my hope for your continued academic success. Keep up the great work.<br/><br/><br/>
         Yours Truly,"""
@@ -57,9 +57,9 @@ def create_pdf(name, gpa, address, award_type_value):
         {address}<br/>
         Colorado Springs, CO 80907<br/><br/><br/>
         Dear {name.strip().split(" ")[0]},<br/><br/>
-        Congratulations! I am most pleased to announce that you have been named to the President's List for the Spring 2023 semester.
+        Congratulations! I am most pleased to announce that you have been named to the President's List for the {term} semester.
         In order to receive this honor, a student must have earned a 4.0 GPA, while completing at least 12 credit hours.
-        Your GPA from Spring 2023 was {gpa}.<br/><br/>
+        Your GPA from {term} was {gpa}.<br/><br/>
         Your outstanding academic performance for this semester is a source of considerable pride for the College of Letters, Arts, and Sciences at the University of Colorado Colorado Springs.<br/><br/>
         Please accept my sincere congratulations for this well-deserved honor and my hope for your continued academic success. Keep up the great work.<br/><br/><br/>
         Yours Truly,"""
@@ -120,7 +120,7 @@ def create_pdf(name, gpa, address, award_type_value):
     pdf.save()
     return filename
 
-def send_email(sender_email, password, receiver_email, name, gpa, address, award_type_value):
+def send_email(sender_email, password, receiver_email, name, gpa, address, award_type_value, term):
 
     if (award_type_value == 'deans_list'):
         type_value = "Dean's"
@@ -129,12 +129,12 @@ def send_email(sender_email, password, receiver_email, name, gpa, address, award
 
     # create email object
     message = MIMEMultipart("alternative")
-    message["Subject"] = f"LAS {type_value} List Recipient | Spring2023 - DEVELOPMENT"
+    message["Subject"] = f"LAS {type_value} List Recipient | {term} - DEVELOPMENT"
     message["From"] = sender_email
     message["To"] = receiver_email
 
     # create pdf file
-    filename = create_pdf(name, gpa, address, award_type_value)
+    filename = create_pdf(name, gpa, address, award_type_value, term)
 
     # Attach the pdf
     with open(filename, "rb") as attachment:
@@ -155,7 +155,7 @@ def send_email(sender_email, password, receiver_email, name, gpa, address, award
     <body>
         <p>
             Hello {name},<br><br>
-            Congratulations! The College of Letters, Arts & Sciences has named you a {type_value} List honoree for the Spring 2023 semester.<br><br>
+            Congratulations! The College of Letters, Arts & Sciences has named you a {type_value} List honoree for the {term} semester.<br><br>
             Associate Dean Ilyasova would like to commend you in the attached letter.<br><br>
             You've been featured in UCCS' Communique should you like to share the news with family and friends. https://communique.uccs.edu/?p=148841#LAS<br><br>
 
@@ -198,21 +198,10 @@ class Application(ttk.Frame):
         self.pass_entry = ttk.Entry(self, show="*")
         self.pass_entry.pack()
 
-        self.choose_file = ttk.Button(self)
-        self.choose_file["text"] = "Choose CSV file"
-        self.choose_file["command"] = self.load_file
-        self.choose_file.pack()
-
-        self.file_label = ttk.Label(self, text="")
-        self.file_label.pack()
-
-        self.send_emails = ttk.Button(self)
-        self.send_emails["text"] = "Send Emails"
-        self.send_emails["command"] = self.send_emails_func
-        self.send_emails.pack()
-
-        self.progress = ttk.Progressbar(self, length=100, mode='indeterminate')
-        self.progress.pack()
+        self.term_label = ttk.Label(self, text="Term:")
+        self.term_label.pack()
+        self.term_entry = ttk.Entry(self)
+        self.term_entry.pack()
 
         self.award_type = StringVar()
         self.award_type.set("deans_list") 
@@ -231,6 +220,22 @@ class Application(ttk.Frame):
             value="presidents_list"
         )
         self.radio_button2.pack()
+
+        self.choose_file = ttk.Button(self)
+        self.choose_file["text"] = "Choose CSV file"
+        self.choose_file["command"] = self.load_file
+        self.choose_file.pack()
+
+        self.file_label = ttk.Label(self, text="")
+        self.file_label.pack()
+
+        self.send_emails = ttk.Button(self)
+        self.send_emails["text"] = "Send Emails"
+        self.send_emails["command"] = self.send_emails_func
+        self.send_emails.pack()
+
+        self.progress = ttk.Progressbar(self, length=100, mode='indeterminate')
+        self.progress.pack()
 
     def load_file(self):
         self.filename = filedialog.askopenfilename(initialdir = "/", title = "Select file",
@@ -254,9 +259,10 @@ class Application(ttk.Frame):
                 data.append(row)
 
         award_type_value = self.award_type.get()
+        term = self.term_entry.get()
 
         for index, row in enumerate(data[1:]):
-            send_email(self.email_entry.get(), self.pass_entry.get(), row[0], row[1], str(row[2]), row[3], award_type_value)
+            send_email(self.email_entry.get(), self.pass_entry.get(), row[0], row[1], str(row[2]), row[3], award_type_value, term)
             self.queue.put((index+1)*100/len(data))
 
         self.queue.put(None)
