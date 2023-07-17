@@ -30,7 +30,7 @@ import smtplib, ssl
 from threading import Thread
 import queue
 
-def create_pdf(name, gpa, address, award_type_value, term):
+def create_pdf(name, gpa, address, city, zip, state, award_type_value, term):
 
     fonts.addMapping('Times-Roman', 0, 0, 'Times-Roman')
     filename = name + ".pdf"
@@ -43,7 +43,7 @@ def create_pdf(name, gpa, address, award_type_value, term):
         message_text = f"""July 13, 2023,<br/><br/><br/>
         {name}<br/>
         {address}<br/>
-        Colorado Springs, CO 80907<br/><br/><br/>
+        {city}, {state} {zip}<br/><br/><br/>
         Dear {name.strip().split(" ")[0]},<br/><br/>
         Congratulations! I am most pleased to announce that you have been named to the Dean's List for the {term} semester.
         In order to receive this honor, a student must have earned between a 3.75-3.99 GPA, while completing at least 12 credit hours.
@@ -55,7 +55,7 @@ def create_pdf(name, gpa, address, award_type_value, term):
         message_text = f"""July 13, 2023,<br/><br/><br/>
         {name}<br/>
         {address}<br/>
-        Colorado Springs, CO 80907<br/><br/><br/>
+        {city}, {state} {zip}<br/><br/><br/>
         Dear {name.strip().split(" ")[0]},<br/><br/>
         Congratulations! I am most pleased to announce that you have been named to the President's List for the {term} semester.
         In order to receive this honor, a student must have earned a 4.0 GPA, while completing at least 12 credit hours.
@@ -120,7 +120,7 @@ def create_pdf(name, gpa, address, award_type_value, term):
     pdf.save()
     return filename
 
-def send_email(sender_email, password, receiver_email, name, gpa, address, award_type_value, term):
+def send_email(sender_email, password, receiver_email, name, gpa, address, city, zip, state, award_type_value, term):
 
     if (award_type_value == 'deans_list'):
         type_value = "Dean's"
@@ -129,12 +129,12 @@ def send_email(sender_email, password, receiver_email, name, gpa, address, award
 
     # create email object
     message = MIMEMultipart("alternative")
-    message["Subject"] = f"LAS {type_value} List Recipient | {term} - DEVELOPMENT"
+    message["Subject"] = f"LAS {type_value} List Recipient | {term}"
     message["From"] = sender_email
     message["To"] = receiver_email
 
     # create pdf file
-    filename = create_pdf(name, gpa, address, award_type_value, term)
+    filename = create_pdf(name, gpa, address, city, zip, state, award_type_value, term)
 
     # Attach the pdf
     with open(filename, "rb") as attachment:
@@ -262,7 +262,18 @@ class Application(ttk.Frame):
         term = self.term_entry.get()
 
         for index, row in enumerate(data[1:]):
-            send_email(self.email_entry.get(), self.pass_entry.get(), row[0], row[1], str(row[2]), row[3], award_type_value, term)
+
+            last_name = row[0]
+            first_name = row[1]
+            name = first_name + " " + last_name
+            term_gpa = f"{float(row[2]):.2f}"
+            address = row[6]
+            city = row[8]
+            state = row[9]
+            zip = row[10]
+            email = row[11]
+
+            send_email(self.email_entry.get(), self.pass_entry.get(), receiver_email=email, name=name, gpa=term_gpa, address=address, city=city, zip=zip, state=state, award_type_value=award_type_value, term=term)
             self.queue.put((index+1)*100/len(data))
 
         self.queue.put(None)
