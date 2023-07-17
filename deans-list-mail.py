@@ -52,7 +52,7 @@ def create_pdf(name, gpa, address, city, zip, state, award_type_value, term):
         Please accept my sincere congratulations for this well-deserved honor and my hope for your continued academic success. Keep up the great work.<br/><br/><br/>
         Yours Truly,"""
     elif (award_type_value == 'presidents_list'):
-        message_text = f"""July 13, 2023,<br/><br/><br/>
+        message_text = f"""July 13, 2023<br/><br/><br/>
         {name}<br/>
         {address.title()}<br/>
         {city}, {state} {zip}<br/><br/><br/>
