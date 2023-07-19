@@ -46,8 +46,7 @@ def create_pdf(name, gpa, address, city, zip, state, award_type_value, term):
         {city}, {state} {zip}<br/><br/><br/>
         Dear {name.strip().split(" ")[0]},<br/><br/>
         Congratulations! I am most pleased to announce that you have been named to the Dean's List for the {term} semester.
-        In order to receive this honor, a student must have earned between a 3.75-3.99 GPA, while completing at least 12 credit hours.
-        Your GPA from {term} was {gpa}.<br/><br/>
+        In order to receive this honor, a student must have earned between a 3.75-3.99 GPA, while completing at least 12 credit hours.<br/><br/>
         Your outstanding academic performance for this semester is a source of considerable pride for the College of Letters, Arts, and Sciences at the University of Colorado Colorado Springs.<br/><br/>
         Please accept my sincere congratulations for this well-deserved honor and my hope for your continued academic success. Keep up the great work.<br/><br/><br/>
         Yours Truly,"""
@@ -155,7 +154,7 @@ def send_email(sender_email, password, receiver_email, name, gpa, address, city,
         <p>
             Hello {name},<br><br>
             Congratulations! The College of Letters, Arts & Sciences has named you a {type_value} List honoree for the {term} semester.<br><br>
-            Associate Dean Ilyasova would like to commend you in the attached letter.<br><br>
+            Associate Dean Ilyasova would like to commend you on your achievement.<br><br>
             In case you missed it, you've been featured in UCCS' Communique! https://communique.uccs.edu/?p=148841#LAS<br><br>
 
             -The Letters, Arts & Sciences Dean's Office Team
